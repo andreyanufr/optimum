@@ -397,6 +397,13 @@ class TasksManager:
             "text-generation-with-past",
             onnx="CodeGenOnnxConfig",
         ),
+        "codet5p": supported_tasks_mapping(
+            "feature-extraction",
+            "feature-extraction-with-past",
+            "text2text-generation",
+            "text2text-generation-with-past",
+            onnx="CodeT5pOnnxConfig",
+        ),
         "convbert": supported_tasks_mapping(
             "feature-extraction",
             "fill-mask",

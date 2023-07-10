@@ -392,6 +392,36 @@ class LongT5OnnxConfig(T5OnnxConfig):
     DEFAULT_ONNX_OPSET = 14
 
 
+class CodeT5pOnnxConfig(TextSeq2SeqOnnxConfig):
+    DEFAULT_ONNX_OPSET = 14
+
+    NORMALIZED_CONFIG_CLASS = NormalizedSeq2SeqConfig.with_args(
+        vocab_size="encoder.vocab_size",
+        hidden_size="encoder.n_embd",
+        encoder_num_attention_heads="encoder.n_head",
+        decoder_num_attention_heads="decoder.n_head",
+        encoder_num_layers="decoder.n_layer",
+        decoder_num_layers="encoder.n_layer",
+        key_value_dim="d_kv",
+        allow_new=True,
+    )
+
+    def add_past_key_values(self, inputs_or_outputs: Dict[str, Dict[int, str]], direction: str):
+        if direction not in ["inputs", "outputs"]:
+            raise ValueError(f'direction must either be "inputs" or "outputs", but {direction} was given')
+
+        if direction == "inputs":
+            decoder_sequence_name = "past_decoder_sequence_length"
+            name = "past_key_values"
+        else:
+            decoder_sequence_name = "past_decoder_sequence_length + 1"
+            name = "present"
+
+        for i in range(self._normalized_config.decoder_num_layers):
+            inputs_or_outputs[f"{name}.{i}.decoder.key"] = {0: "batch_size", 2: decoder_sequence_name}
+            inputs_or_outputs[f"{name}.{i}.decoder.value"] = {0: "batch_size", 2: decoder_sequence_name}
+
+
 class BartDummyTextInputGenerator(DummyTextInputGenerator):
     def __init__(
         self,
